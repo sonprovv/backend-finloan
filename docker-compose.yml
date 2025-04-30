@@ -1,16 +1,205 @@
-version: '3.8'
+version: "3.8"
+
 services:
-  service-a:
-    build: ./services/service-a
+#  All database services
+  loan-db:
+    image: mysql:8.0
+    container_name: loan-db
+    environment:
+      MYSQL_ROOT_PASSWORD: loan_application
+      MYSQL_DATABASE: loan_application_db
+      MYSQL_USER: loan_application_user
+      MYSQL_PASSWORD: loan_application_password
     ports:
-      - "5001:5000"
+      - "3307:3306"
+    volumes:
+      - loan_db_data:/var/lib/mysql
+    networks:
+      - loan-net
 
-  service-b:
-    build: ./services/service-b
+  customer-db:
+    image: mysql:8.0
+    container_name: customer-db
+    environment:
+      MYSQL_ROOT_PASSWORD: customer
+      MYSQL_DATABASE: customer_db
+      MYSQL_USER: customer_user
+      MYSQL_PASSWORD: customer_password
     ports:
-      - "5002:5000"
+      - "3308:3306"
+    volumes:
+      - customer_db_data:/var/lib/mysql
+    networks:
+      - customer-net
 
-  gateway:
-    build: ./gateway
+  credit-score-db:
+    image: mysql:8.0
+    container_name: credit-score-db
+    environment:
+      MYSQL_ROOT_PASSWORD: credit_score
+      MYSQL_DATABASE: credit_score_db
+      MYSQL_USER: credit_score_user
+      MYSQL_PASSWORD: credit_score_password
     ports:
-      - "8080:8000"
+      - "3309:3306"
+    volumes:
+      - credit_score_db_data:/var/lib/mysql
+    networks:
+      - credit-score-net
+
+  loan-contract-db:
+    image: mysql:8.0
+    container_name: loan-contract-db
+    environment:
+      MYSQL_ROOT_PASSWORD: loan_contract
+      MYSQL_DATABASE: loan_contract_db
+      MYSQL_USER: loan_contract_user
+      MYSQL_PASSWORD: loan_contract_password
+    ports:
+      - "3310:3306"
+    volumes:
+      - loan_contract_db_data:/var/lib/mysql
+    networks:
+      - loan-contract-net
+
+  payment-scheduling-db:
+    image: mysql:8.0
+    container_name: payment-scheduling-db
+    environment:
+      MYSQL_ROOT_PASSWORD: payment_scheduling
+      MYSQL_DATABASE: payment_scheduling_db
+      MYSQL_USER: payment_scheduling_user
+      MYSQL_PASSWORD: payment_scheduling_password
+    ports:
+      - "3311:3306"
+    volumes:
+      - payment_scheduling_db_data:/var/lib/mysql
+    networks:
+      - payment-scheduling-net
+
+  identity-verification-db:
+    image: mysql:8.0
+    container_name: identity-verification-db
+    environment:
+      MYSQL_ROOT_PASSWORD: identity_verification
+      MYSQL_DATABASE: identity_verification_db
+      MYSQL_USER: identity_verification_user
+      MYSQL_PASSWORD: identity_verification_password
+    ports:
+      - "3312:3306"
+    volumes:
+      - identity_verification_db_data:/var/lib/mysql
+    networks:
+      - identity-verification-net
+
+  risk-assessment-db:
+    image: mysql:8.0
+    container_name: risk-assessment-db
+    environment:
+      MYSQL_ROOT_PASSWORD: risk_assessment
+      MYSQL_DATABASE: risk_assessment_db
+      MYSQL_USER: risk_assessment_user
+      MYSQL_PASSWORD: risk_assessment_password
+    ports:
+      - "3313:3306"
+    volumes:
+      - risk_assessment_db_data:/var/lib/mysql
+    networks:
+      - risk-assessment-net
+
+  notification-db:
+    image: mysql:8.0
+    container_name: notification-db
+    environment:
+      MYSQL_ROOT_PASSWORD: notification
+      MYSQL_DATABASE: notification_db
+      MYSQL_USER: notification_user
+      MYSQL_PASSWORD: notification_password
+    ports:
+      - "3314:3306"
+    volumes:
+      - notification_db_data:/var/lib/mysql
+    networks:
+      - notification-net
+
+  document-storage-db:
+    image: mysql:8.0
+    container_name: document-storage-db
+    environment:
+      MYSQL_ROOT_PASSWORD: document_storage
+      MYSQL_DATABASE: document_storage_db
+      MYSQL_USER: document_storage_user
+      MYSQL_PASSWORD: document_storage_password
+    ports:
+      - "3315:3306"
+    volumes:
+      - document_storage_db_data:/var/lib/mysql
+    networks:
+      - document-storage-net
+
+  auth-db:
+    image: mysql:8.0
+    container_name: auth-db
+    environment:
+      MYSQL_ROOT_PASSWORD: auth
+      MYSQL_DATABASE: auth_db
+      MYSQL_USER: auth_user
+      MYSQL_PASSWORD: auth_password
+    ports:
+      - "3316:3306"
+    volumes:
+      - auth_db_data:/var/lib/mysql
+    networks:
+      - auth-net
+
+  audit-log-db:
+    image: mysql:8.0
+    container_name: audit-log-db
+    environment:
+      MYSQL_ROOT_PASSWORD: audit_log
+      MYSQL_DATABASE: audit_log_db
+      MYSQL_USER: audit_log_user
+      MYSQL_PASSWORD: audit_log_password
+    ports:
+      - "3317:3306"
+    volumes:
+      - audit_log_db_data:/var/lib/mysql
+    networks:
+      - audit-log-net
+
+networks:
+  loan-net:
+    driver: bridge
+  customer-net:
+    driver: bridge
+  credit-score-net:
+    driver: bridge
+  loan-contract-net:
+    driver: bridge
+  payment-scheduling-net:
+    driver: bridge
+  identity-verification-net:
+    driver: bridge
+  risk-assessment-net:
+    driver: bridge
+  notification-net:
+    driver: bridge
+  document-storage-net:
+    driver: bridge
+  auth-net:
+    driver: bridge
+  audit-log-net:
+    driver: bridge
+
+volumes:
+  loan_db_data:
+  customer_db_data:
+  credit_score_db_data:
+  loan_contract_db_data:
+  payment_scheduling_db_data:
+  identity_verification_db_data:
+  risk_assessment_db_data:
+  notification_db_data:
+  document_storage_db_data:
+  auth_db_data:
+  audit_log_db_data:
