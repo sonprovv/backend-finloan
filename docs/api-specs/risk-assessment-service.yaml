@@ -1,0 +1,174 @@
+openapi: 3.0.3
+info:
+  title: Risk Assessment Service API
+  version: 1.0.0
+  description: APIs to analyze and assess the risk associated with customers based on credit and financial data.
+
+servers:
+  - url: http://localhost:8008
+
+paths:
+  /assessments:
+    post:
+      summary: Create a new risk assessment for a customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customer_id:
+                  type: integer
+                score:
+                  type: number
+                  format: float
+                risk_level:
+                  type: string
+                assessed_at:
+                  type: string
+                  format: date-time
+              required:
+                - customer_id
+                - score
+                - risk_level
+                - assessed_at
+      responses:
+        '201':
+          description: Risk assessment created
+    get:
+      summary: Get all risk assessments
+      responses:
+        '200':
+          description: List of risk assessments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RiskAssessment'
+
+  /assessments/{id}:
+    get:
+      summary: Get a risk assessment by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Risk assessment details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RiskAssessment'
+    put:
+      summary: Update a risk assessment by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RiskAssessment'
+      responses:
+        '200':
+          description: Risk assessment updated
+    delete:
+      summary: Delete a risk assessment by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Risk assessment deleted
+
+  /assessments/{assessment_id}/factors:
+    post:
+      summary: Add a risk factor detail to a risk assessment
+      parameters:
+        - in: path
+          name: assessment_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                factor:
+                  type: string
+                value:
+                  type: string
+                weight:
+                  type: number
+                  format: float
+              required:
+                - factor
+                - value
+                - weight
+      responses:
+        '201':
+          description: Risk factor detail added
+    get:
+      summary: Get all risk factor details for a risk assessment
+      parameters:
+        - in: path
+          name: assessment_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of risk factor details
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RiskFactorDetail'
+
+components:
+  schemas:
+    RiskAssessment:
+      type: object
+      properties:
+        id:
+          type: integer
+        customer_id:
+          type: integer
+        score:
+          type: number
+          format: float
+        risk_level:
+          type: string
+        assessed_at:
+          type: string
+          format: date-time
+    RiskFactorDetail:
+      type: object
+      properties:
+        id:
+          type: integer
+        assessment_id:
+          type: integer
+        factor:
+          type: string
+        value:
+          type: string
+        weight:
+          type: number
+          format: float

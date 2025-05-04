@@ -1,0 +1,174 @@
+openapi: 3.0.3
+info:
+  title: Loan Contract Service API
+  version: 1.0.0
+  description: APIs to manage loan contracts and contract terms.
+
+servers:
+  - url: http://localhost:8007
+
+paths:
+  /contracts:
+    post:
+      summary: Create a new loan contract
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                application_id:
+                  type: integer
+                signed_at:
+                  type: string
+                  format: date-time
+                principal:
+                  type: number
+                  format: double
+                interest_rate:
+                  type: number
+                  format: float
+                status:
+                  type: string
+              required:
+                - application_id
+                - signed_at
+                - principal
+                - interest_rate
+                - status
+      responses:
+        '201':
+          description: Loan contract created
+    get:
+      summary: Get all loan contracts
+      responses:
+        '200':
+          description: List of loan contracts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LoanContract'
+
+  /contracts/{id}:
+    get:
+      summary: Get a loan contract by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Loan contract details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoanContract'
+    put:
+      summary: Update a loan contract by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoanContract'
+      responses:
+        '200':
+          description: Loan contract updated
+    delete:
+      summary: Delete a loan contract by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Loan contract deleted
+
+  /contracts/{contract_id}/terms:
+    post:
+      summary: Add a contract term to a loan contract
+      parameters:
+        - in: path
+          name: contract_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                value:
+                  type: string
+              required:
+                - description
+                - value
+      responses:
+        '201':
+          description: Contract term added
+    get:
+      summary: Get all contract terms for a loan contract
+      parameters:
+        - in: path
+          name: contract_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of contract terms
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContractTerm'
+
+components:
+  schemas:
+    LoanContract:
+      type: object
+      properties:
+        id:
+          type: integer
+        application_id:
+          type: integer
+        signed_at:
+          type: string
+          format: date-time
+        principal:
+          type: number
+          format: double
+        interest_rate:
+          type: number
+          format: float
+        status:
+          type: string
+    ContractTerm:
+      type: object
+      properties:
+        id:
+          type: integer
+        contract_id:
+          type: integer
+        description:
+          type: string
+        value:
+          type: string

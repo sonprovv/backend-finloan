@@ -1,0 +1,299 @@
+openapi: 3.0.0
+info:
+  title: Loan Application Service API
+  description: API for managing loan applications, including creating, updating, and tracking loan application statuses.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8002
+    description: Local server
+
+paths:
+  /loan-application:
+    post:
+      summary: Create a new loan application
+      description: Create a new loan application for a customer.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customer_id:
+                  type: integer
+                  description: ID of the customer applying for the loan
+                amount:
+                  type: number
+                  format: decimal
+                  description: The loan amount requested
+                term_months:
+                  type: integer
+                  description: The loan term in months
+              required:
+                - customer_id
+                - amount
+                - term_months
+      responses:
+        '201':
+          description: Loan application created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: The ID of the created loan application
+                  customer_id:
+                    type: integer
+                  amount:
+                    type: number
+                    format: decimal
+                  term_months:
+                    type: integer
+                  status:
+                    type: string
+                    example: "PENDING"
+                  created_at:
+                    type: string
+                    format: date-time
+        '400':
+          description: Bad request (missing or invalid data)
+
+  /loan-application/{id}:
+    get:
+      summary: Get details of a loan application by ID
+      description: Fetches the details of a specific loan application by ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the loan application
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Loan application details retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  customer_id:
+                    type: integer
+                  amount:
+                    type: number
+                    format: decimal
+                  term_months:
+                    type: integer
+                  status:
+                    type: string
+                  created_at:
+                    type: string
+                    format: date-time
+        '404':
+          description: Loan application not found
+
+    put:
+      summary: Update loan application status
+      description: Update the status of a loan application (e.g., from "PENDING" to "APPROVED").
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the loan application
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  description: The new status of the loan application
+                  example: "APPROVED"
+              required:
+                - status
+      responses:
+        '200':
+          description: Loan application status updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  customer_id:
+                    type: integer
+                  amount:
+                    type: number
+                    format: decimal
+                  term_months:
+                    type: integer
+                  status:
+                    type: string
+                  created_at:
+                    type: string
+                    format: date-time
+        '400':
+          description: Bad request (invalid status)
+        '404':
+          description: Loan application not found
+
+    delete:
+      summary: Delete a loan application
+      description: Delete a specific loan application by ID.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the loan application
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Loan application deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Loan application deleted successfully"
+        '404':
+          description: Loan application not found
+        '409':
+          description: Conflict (loan application can't be deleted)
+
+  /loan-application/customer/{customer_id}:
+    get:
+      summary: Get all loan applications for a customer
+      description: Fetch all loan applications for a specific customer by customer ID.
+      parameters:
+        - name: customer_id
+          in: path
+          required: true
+          description: ID of the customer whose applications are to be retrieved
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of loan applications for the customer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    customer_id:
+                      type: integer
+                    amount:
+                      type: number
+                      format: decimal
+                    term_months:
+                      type: integer
+                    status:
+                      type: string
+                    created_at:
+                      type: string
+                      format: date-time
+        '404':
+          description: No loan applications found for the customer
+
+  /loan-application/{id}/status-history:
+    get:
+      summary: Get the status change history of a loan application
+      description: Fetch the history of status changes for a specific loan application.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the loan application
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Loan application status history retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    status:
+                      type: string
+                    changed_at:
+                      type: string
+                      format: date-time
+        '404':
+          description: Loan application not found
+
+  /loan-application/all:
+    get:
+      summary: Get all loan applications (Admin only)
+      description: Fetch all loan applications in the system. This is restricted to admin users.
+      responses:
+        '200':
+          description: List of all loan applications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    customer_id:
+                      type: integer
+                    amount:
+                      type: number
+                      format: decimal
+                    term_months:
+                      type: integer
+                    status:
+                      type: string
+                    created_at:
+                      type: string
+                      format: date-time
+        '403':
+          description: Forbidden (Admin access required)
+
+components:
+  schemas:
+    LoanApplication:
+      type: object
+      properties:
+        id:
+          type: integer
+        customer_id:
+          type: integer
+        amount:
+          type: number
+          format: decimal
+        term_months:
+          type: integer
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+    StatusHistory:
+      type: object
+      properties:
+        status:
+          type: string
+        changed_at:
+          type: string
+          format: date-time

@@ -1,0 +1,427 @@
+openapi: 3.0.0
+info:
+  title: Customer Service API
+  description: API for managing customer profiles, financial profiles, and credit status.
+  version: 1.0.0
+  contact:
+    name: Support Team
+    email: support@example.com
+
+servers:
+  - url: http://localhost:8003
+    description: Local development server
+
+paths:
+  /customers:
+    get:
+      summary: Get a list of all customers
+      description: Fetches a list of all customers in the system.
+      responses:
+        '200':
+          description: A list of customers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    name:
+                      type: string
+                    email:
+                      type: string
+                    phone:
+                      type: string
+                    dob:
+                      type: string
+                      format: date
+                    national_id:
+                      type: string
+                    created_at:
+                      type: string
+                      format: date-time
+        '500':
+          description: Internal Server Error
+
+    post:
+      summary: Create a new customer
+      description: Adds a new customer to the system.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+                dob:
+                  type: string
+                  format: date
+                national_id:
+                  type: string
+                created_at:
+                  type: string
+                  format: date-time
+              required:
+                - name
+                - email
+                - phone
+                - dob
+                - national_id
+      responses:
+        '201':
+          description: Customer created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  message:
+                    type: string
+        '400':
+          description: Invalid input
+        '500':
+          description: Internal Server Error
+
+  /customers/{customer_id}:
+    get:
+      summary: Get customer details
+      description: Fetches the details of a specific customer by their ID.
+      parameters:
+        - in: path
+          name: customer_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Customer details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  name:
+                    type: string
+                  email:
+                    type: string
+                  phone:
+                    type: string
+                  dob:
+                    type: string
+                    format: date
+                  national_id:
+                    type: string
+                  created_at:
+                    type: string
+                    format: date-time
+        '404':
+          description: Customer not found
+        '500':
+          description: Internal Server Error
+
+    put:
+      summary: Update customer details
+      description: Updates the information of an existing customer.
+      parameters:
+        - in: path
+          name: customer_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                phone:
+                  type: string
+                dob:
+                  type: string
+                  format: date
+                national_id:
+                  type: string
+                created_at:
+                  type: string
+                  format: date-time
+              required:
+                - name
+                - email
+                - phone
+                - dob
+                - national_id
+      responses:
+        '200':
+          description: Customer details updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: Invalid input
+        '404':
+          description: Customer not found
+        '500':
+          description: Internal Server Error
+
+    delete:
+      summary: Delete a customer
+      description: Deletes a customer from the system.
+      parameters:
+        - in: path
+          name: customer_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Customer deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '404':
+          description: Customer not found
+        '500':
+          description: Internal Server Error
+
+  /customers/{customer_id}/financial-profile:
+    get:
+      summary: Get financial profile of a customer
+      description: Fetches the financial profile of a customer.
+      parameters:
+        - in: path
+          name: customer_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Customer's financial profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  customer_id:
+                    type: integer
+                  income:
+                    type: number
+                    format: float
+                  employment_status:
+                    type: string
+                  debts:
+                    type: number
+                    format: float
+                  assets:
+                    type: number
+                    format: float
+        '404':
+          description: Financial profile not found
+        '500':
+          description: Internal Server Error
+
+    post:
+      summary: Create or update financial profile
+      description: Adds or updates a customer's financial profile.
+      parameters:
+        - in: path
+          name: customer_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                income:
+                  type: number
+                  format: float
+                employment_status:
+                  type: string
+                debts:
+                  type: number
+                  format: float
+                assets:
+                  type: number
+                  format: float
+              required:
+                - income
+                - employment_status
+                - debts
+                - assets
+      responses:
+        '201':
+          description: Financial profile created or updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  customer_id:
+                    type: integer
+                  message:
+                    type: string
+        '400':
+          description: Invalid input
+        '404':
+          description: Customer not found
+        '500':
+          description: Internal Server Error
+
+  /customers/{customer_id}/credit-status:
+    get:
+      summary: Get credit status of a customer
+      description: Fetches the credit status and current score of a customer.
+      parameters:
+        - in: path
+          name: customer_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Customer's credit status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  customer_id:
+                    type: integer
+                  current_score:
+                    type: integer
+                  last_updated:
+                    type: string
+                    format: date-time
+        '404':
+          description: Credit status not found
+        '500':
+          description: Internal Server Error
+
+    put:
+      summary: Update credit status
+      description: Updates the credit status and score of a customer.
+      parameters:
+        - in: path
+          name: customer_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                current_score:
+                  type: integer
+                last_updated:
+                  type: string
+                  format: date-time
+              required:
+                - current_score
+                - last_updated
+      responses:
+        '200':
+          description: Credit status updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: Invalid input
+        '404':
+          description: Customer not found
+        '500':
+          description: Internal Server Error
+
+components:
+  schemas:
+    Customer:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        dob:
+          type: string
+          format: date
+        national_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    FinancialProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        customer_id:
+          type: integer
+        income:
+          type: number
+          format: float
+        employment_status:
+          type: string
+        debts:
+          type: number
+          format: float
+        assets:
+          type: number
+          format: float
+
+    CreditStatus:
+      type: object
+      properties:
+        id:
+          type: integer
+        customer_id:
+          type: integer
+        current_score:
+          type: integer
+        last_updated:
+          type: string
+          format: date-time

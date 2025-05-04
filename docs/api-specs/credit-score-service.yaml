@@ -1,0 +1,159 @@
+openapi: 3.0.3
+info:
+  title: Credit Score Service API
+  version: 1.0.0
+  description: APIs to fetch, store, and manage credit score reports from external credit agencies.
+
+servers:
+  - url: http://localhost:8009
+
+paths:
+  /score-reports:
+    post:
+      summary: Create a new credit score report for a customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customer_id:
+                  type: integer
+                score:
+                  type: integer
+                source:
+                  type: string
+                retrieved_at:
+                  type: string
+                  format: date-time
+              required:
+                - customer_id
+                - score
+                - source
+                - retrieved_at
+      responses:
+        '201':
+          description: Credit score report created
+    get:
+      summary: Get all credit score reports
+      responses:
+        '200':
+          description: List of credit score reports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CreditScoreReport'
+
+  /score-reports/{id}:
+    get:
+      summary: Get a credit score report by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Credit score report details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreditScoreReport'
+    put:
+      summary: Update a credit score report by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreditScoreReport'
+      responses:
+        '200':
+          description: Credit score report updated
+    delete:
+      summary: Delete a credit score report by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Credit score report deleted
+
+  /external-credit-agency-logs:
+    post:
+      summary: Log an external credit agency request and response
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                request_payload:
+                  type: string
+                response_payload:
+                  type: string
+                called_at:
+                  type: string
+                  format: date-time
+              required:
+                - request_payload
+                - response_payload
+                - called_at
+      responses:
+        '201':
+          description: External credit agency log created
+    get:
+      summary: Get all external credit agency logs
+      responses:
+        '200':
+          description: List of external credit agency logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExternalCreditAgencyLog'
+
+components:
+  schemas:
+    CreditScoreReport:
+      type: object
+      properties:
+        id:
+          type: integer
+        customer_id:
+          type: integer
+        score:
+          type: integer
+        source:
+          type: string
+        retrieved_at:
+          type: string
+          format: date-time
+
+    ExternalCreditAgencyLog:
+      type: object
+      properties:
+        id:
+          type: integer
+        request_payload:
+          type: string
+        response_payload:
+          type: string
+        called_at:
+          type: string
+          format: date-time
