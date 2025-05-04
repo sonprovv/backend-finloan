@@ -1,0 +1,406 @@
+openapi: 3.0.3
+info:
+  title: Payment Scheduling Service API
+  version: 1.0.0
+  description: APIs for creating and managing payment schedules for loan contracts.
+
+servers:
+  - url: http://localhost:8004
+
+paths:
+  /payment-schedules:
+    post:
+      summary: Create a new payment schedule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                loan_id:
+                  type: integer
+                customer_id:
+                  type: integer
+                loan_amount:
+                  type: number
+                interest_rate:
+                  type: number
+                term_months:
+                  type: integer
+                payment_frequency:
+                  type: string
+                  enum: [MONTHLY, BIWEEKLY, WEEKLY]
+                start_date:
+                  type: string
+                  format: date
+              required:
+                - loan_id
+                - customer_id
+                - loan_amount
+                - interest_rate
+                - term_months
+                - payment_frequency
+                - start_date
+      responses:
+        '201':
+          description: Payment schedule created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentSchedule'
+
+    get:
+      summary: Get all payment schedules
+      parameters:
+        - in: query
+          name: customer_id
+          schema:
+            type: integer
+          required: false
+        - in: query
+          name: loan_id
+          schema:
+            type: integer
+          required: false
+      responses:
+        '200':
+          description: List of payment schedules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PaymentSchedule'
+
+  /payment-schedules/{id}:
+    get:
+      summary: Get payment schedule by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Payment schedule details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentSchedule'
+
+    put:
+      summary: Update payment schedule
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [ACTIVE, SUSPENDED, COMPLETED, CANCELLED]
+                adjustment_reason:
+                  type: string
+      responses:
+        '200':
+          description: Payment schedule updated
+
+  /payments:
+    post:
+      summary: Record a new payment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                schedule_id:
+                  type: integer
+                payment_date:
+                  type: string
+                  format: date
+                amount:
+                  type: number
+                payment_method:
+                  type: string
+                  enum: [BANK_TRANSFER, CREDIT_CARD, DEBIT_CARD, CASH, CHECK]
+                transaction_reference:
+                  type: string
+              required:
+                - schedule_id
+                - payment_date
+                - amount
+                - payment_method
+      responses:
+        '201':
+          description: Payment recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+
+    get:
+      summary: Get all payments
+      parameters:
+        - in: query
+          name: schedule_id
+          schema:
+            type: integer
+          required: false
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [SCHEDULED, PENDING, COMPLETED, FAILED, OVERDUE]
+          required: false
+      responses:
+        '200':
+          description: List of payments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Payment'
+
+  /payments/{id}:
+    get:
+      summary: Get payment by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Payment details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+
+    put:
+      summary: Update payment status
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [SCHEDULED, PENDING, COMPLETED, FAILED, OVERDUE]
+                notes:
+                  type: string
+              required:
+                - status
+      responses:
+        '200':
+          description: Payment status updated
+
+  /payments/upcoming:
+    get:
+      summary: Get upcoming payments
+      parameters:
+        - in: query
+          name: customer_id
+          schema:
+            type: integer
+          required: true
+        - in: query
+          name: days
+          schema:
+            type: integer
+            default: 30
+          required: false
+          description: Number of days to look ahead
+      responses:
+        '200':
+          description: List of upcoming payments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Payment'
+
+  /payments/overdue:
+    get:
+      summary: Get overdue payments
+      parameters:
+        - in: query
+          name: customer_id
+          schema:
+            type: integer
+          required: false
+        - in: query
+          name: loan_id
+          schema:
+            type: integer
+          required: false
+      responses:
+        '200':
+          description: List of overdue payments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Payment'
+
+  /payment-history:
+    get:
+      summary: Get payment history
+      parameters:
+        - in: query
+          name: customer_id
+          schema:
+            type: integer
+          required: false
+        - in: query
+          name: loan_id
+          schema:
+            type: integer
+          required: false
+        - in: query
+          name: start_date
+          schema:
+            type: string
+            format: date
+          required: false
+        - in: query
+          name: end_date
+          schema:
+            type: string
+            format: date
+          required: false
+      responses:
+        '200':
+          description: Payment history records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PaymentHistory'
+
+components:
+  schemas:
+    PaymentSchedule:
+      type: object
+      properties:
+        id:
+          type: integer
+        loan_id:
+          type: integer
+        customer_id:
+          type: integer
+        total_amount:
+          type: number
+        remaining_amount:
+          type: number
+        payment_frequency:
+          type: string
+          enum: [MONTHLY, BIWEEKLY, WEEKLY]
+        next_payment_date:
+          type: string
+          format: date
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [ACTIVE, SUSPENDED, COMPLETED, CANCELLED]
+        payments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Payment'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Payment:
+      type: object
+      properties:
+        id:
+          type: integer
+        schedule_id:
+          type: integer
+        due_date:
+          type: string
+          format: date
+        amount:
+          type: number
+        principal_amount:
+          type: number
+        interest_amount:
+          type: number
+        fees:
+          type: number
+        payment_date:
+          type: string
+          format: date
+        payment_method:
+          type: string
+          enum: [BANK_TRANSFER, CREDIT_CARD, DEBIT_CARD, CASH, CHECK]
+        transaction_reference:
+          type: string
+        status:
+          type: string
+          enum: [SCHEDULED, PENDING, COMPLETED, FAILED, OVERDUE]
+        notes:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    PaymentHistory:
+      type: object
+      properties:
+        id:
+          type: integer
+        payment_id:
+          type: integer
+        customer_id:
+          type: integer
+        loan_id:
+          type: integer
+        action:
+          type: string
+          enum: [CREATED, UPDATED, COMPLETED, FAILED]
+        amount:
+          type: number
+        status:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        details:
+          type: string

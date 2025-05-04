@@ -1,0 +1,255 @@
+openapi: 3.0.3
+info:
+  title: Identity Verification Service API
+  version: 1.0.0
+  description: APIs for verifying customer identity through electronic Know Your Customer (eKYC) processes.
+
+servers:
+  - url: http://localhost:8008
+
+paths:
+  /verifications:
+    post:
+      summary: Create a new identity verification request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customer_id:
+                  type: integer
+                document_ids:
+                  type: array
+                  items:
+                    type: integer
+                verification_type:
+                  type: string
+                  enum: [ID_VERIFICATION, FACIAL_RECOGNITION, ADDRESS_VERIFICATION, DOCUMENT_VERIFICATION]
+              required:
+                - customer_id
+                - document_ids
+                - verification_type
+      responses:
+        '201':
+          description: Verification request created
+    get:
+      summary: Get all verification requests
+      parameters:
+        - in: query
+          name: customer_id
+          schema:
+            type: integer
+          required: false
+          description: Filter by customer ID
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [PENDING, VERIFIED, REJECTED, EXPIRED]
+          required: false
+          description: Filter by verification status
+      responses:
+        '200':
+          description: List of verification requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VerificationRequest'
+
+  /verifications/{id}:
+    get:
+      summary: Get verification request by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Verification request details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationRequest'
+    put:
+      summary: Update verification request status
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [PENDING, VERIFIED, REJECTED, EXPIRED]
+                notes:
+                  type: string
+              required:
+                - status
+      responses:
+        '200':
+          description: Verification request updated
+
+  /verifications/documents:
+    post:
+      summary: Upload a document for verification
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                customer_id:
+                  type: integer
+                document_type:
+                  type: string
+                  enum: [PASSPORT, ID_CARD, DRIVING_LICENSE, UTILITY_BILL, BANK_STATEMENT]
+                file:
+                  type: string
+                  format: binary
+              required:
+                - customer_id
+                - document_type
+                - file
+      responses:
+        '201':
+          description: Document uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  document_id:
+                    type: integer
+  
+  /verifications/customers/{customer_id}/status:
+    get:
+      summary: Get overall verification status for a customer
+      parameters:
+        - in: path
+          name: customer_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Customer verification status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  customer_id:
+                    type: integer
+                  status:
+                    type: string
+                    enum: [NOT_VERIFIED, PARTIALLY_VERIFIED, FULLY_VERIFIED, VERIFICATION_FAILED]
+                  verified_documents:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                        verified_at:
+                          type: string
+                          format: date-time
+                  verification_expiry:
+                    type: string
+                    format: date-time
+
+  /verifications/history/{customer_id}:
+    get:
+      summary: Get verification history for a customer
+      parameters:
+        - in: path
+          name: customer_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Customer verification history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VerificationHistory'
+
+components:
+  schemas:
+    VerificationRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+        customer_id:
+          type: integer
+        document_ids:
+          type: array
+          items:
+            type: integer
+        verification_type:
+          type: string
+        status:
+          type: string
+          enum: [PENDING, VERIFIED, REJECTED, EXPIRED]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        notes:
+          type: string
+        verified_by:
+          type: string
+    
+    VerificationDocument:
+      type: object
+      properties:
+        id:
+          type: integer
+        customer_id:
+          type: integer
+        document_type:
+          type: string
+        file_path:
+          type: string
+        uploaded_at:
+          type: string
+          format: date-time
+        verification_status:
+          type: string
+          enum: [PENDING, VERIFIED, REJECTED]
+    
+    VerificationHistory:
+      type: object
+      properties:
+        id:
+          type: integer
+        customer_id:
+          type: integer
+        verification_type:
+          type: string
+        status:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        details:
+          type: string

@@ -1,0 +1,529 @@
+openapi: 3.0.3
+info:
+  title: Notification Service API
+  version: 1.0.0
+  description: APIs for sending communications to customers through various channels (email, SMS, push).
+
+servers:
+  - url: http://localhost:8009
+
+paths:
+  /notifications:
+    post:
+      summary: Send a notification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                recipient_id:
+                  type: integer
+                  description: Customer ID of the recipient
+                notification_type:
+                  type: string
+                  enum: [EMAIL, SMS, PUSH, PORTAL]
+                template_id:
+                  type: integer
+                  description: ID of the notification template to use
+                subject:
+                  type: string
+                  description: Subject of the notification (for email)
+                content:
+                  type: string
+                  description: Content of the notification (if not using a template)
+                template_data:
+                  type: object
+                  description: Data to populate in the template
+                priority:
+                  type: string
+                  enum: [LOW, MEDIUM, HIGH, URGENT]
+                scheduled_time:
+                  type: string
+                  format: date-time
+                  description: When to send the notification (null for immediate)
+              required:
+                - recipient_id
+                - notification_type
+              oneOf:
+                - required: [template_id, template_data]
+                - required: [subject, content]
+      responses:
+        '202':
+          description: Notification accepted for delivery
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notification_id:
+                    type: integer
+                  status:
+                    type: string
+                    enum: [QUEUED, SENDING, DELIVERED, FAILED]
+                
+    get:
+      summary: Get all notifications
+      parameters:
+        - in: query
+          name: recipient_id
+          schema:
+            type: integer
+          required: false
+          description: Filter by recipient customer ID
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [QUEUED, SENDING, DELIVERED, FAILED]
+          required: false
+          description: Filter by notification status
+        - in: query
+          name: notification_type
+          schema:
+            type: string
+            enum: [EMAIL, SMS, PUSH, PORTAL]
+          required: false
+          description: Filter by notification type
+      responses:
+        '200':
+          description: List of notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Notification'
+  
+  /notifications/{id}:
+    get:
+      summary: Get notification by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Notification details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+    
+    put:
+      summary: Update notification status
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [QUEUED, SENDING, DELIVERED, FAILED]
+                failure_reason:
+                  type: string
+              required:
+                - status
+      responses:
+        '200':
+          description: Notification updated
+
+    delete:
+      summary: Cancel a pending notification
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Notification cancelled
+        '400':
+          description: Cannot cancel notification (already sent)
+  
+  /notifications/batch:
+    post:
+      summary: Send batch notifications
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                recipient_ids:
+                  type: array
+                  items:
+                    type: integer
+                  description: Customer IDs of the recipients
+                notification_type:
+                  type: string
+                  enum: [EMAIL, SMS, PUSH, PORTAL]
+                template_id:
+                  type: integer
+                subject:
+                  type: string
+                template_data:
+                  type: object
+                  description: Data to populate in the template
+                priority:
+                  type: string
+                  enum: [LOW, MEDIUM, HIGH, URGENT]
+                scheduled_time:
+                  type: string
+                  format: date-time
+              required:
+                - recipient_ids
+                - notification_type
+                - template_id
+      responses:
+        '202':
+          description: Batch notification accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  batch_id:
+                    type: string
+                  notification_count:
+                    type: integer
+  
+  /templates:
+    post:
+      summary: Create a new notification template
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                notification_type:
+                  type: string
+                  enum: [EMAIL, SMS, PUSH, PORTAL]
+                subject_template:
+                  type: string
+                content_template:
+                  type: string
+                variables:
+                  type: array
+                  items:
+                    type: string
+                  description: List of variables used in the template
+              required:
+                - name
+                - notification_type
+                - content_template
+      responses:
+        '201':
+          description: Template created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationTemplate'
+    
+    get:
+      summary: Get all notification templates
+      parameters:
+        - in: query
+          name: notification_type
+          schema:
+            type: string
+            enum: [EMAIL, SMS, PUSH, PORTAL]
+          required: false
+      responses:
+        '200':
+          description: List of notification templates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NotificationTemplate'
+  
+  /templates/{id}:
+    get:
+      summary: Get notification template by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Template details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationTemplate'
+    
+    put:
+      summary: Update notification template
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                subject_template:
+                  type: string
+                content_template:
+                  type: string
+                variables:
+                  type: array
+                  items:
+                    type: string
+              required:
+                - name
+                - content_template
+      responses:
+        '200':
+          description: Template updated
+    
+    delete:
+      summary: Delete a notification template
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Template deleted
+  
+  /preferences/{customer_id}:
+    get:
+      summary: Get customer notification preferences
+      parameters:
+        - in: path
+          name: customer_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Customer preferences
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerPreference'
+    
+    put:
+      summary: Update customer notification preferences
+      parameters:
+        - in: path
+          name: customer_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email_enabled:
+                  type: boolean
+                sms_enabled:
+                  type: boolean
+                push_enabled:
+                  type: boolean
+                portal_enabled:
+                  type: boolean
+                preferred_channel:
+                  type: string
+                  enum: [EMAIL, SMS, PUSH, PORTAL]
+                quiet_hours_start:
+                  type: string
+                  format: time
+                quiet_hours_end:
+                  type: string
+                  format: time
+      responses:
+        '200':
+          description: Preferences updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerPreference'
+
+  /notification-history/{customer_id}:
+    get:
+      summary: Get notification history for a customer
+      parameters:
+        - in: path
+          name: customer_id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: start_date
+          schema:
+            type: string
+            format: date
+          required: false
+        - in: query
+          name: end_date
+          schema:
+            type: string
+            format: date
+          required: false
+      responses:
+        '200':
+          description: Notification history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NotificationHistory'
+
+components:
+  schemas:
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+        recipient_id:
+          type: integer
+        notification_type:
+          type: string
+          enum: [EMAIL, SMS, PUSH, PORTAL]
+        template_id:
+          type: integer
+        subject:
+          type: string
+        content:
+          type: string
+        status:
+          type: string
+          enum: [QUEUED, SENDING, DELIVERED, FAILED]
+        priority:
+          type: string
+          enum: [LOW, MEDIUM, HIGH, URGENT]
+        scheduled_time:
+          type: string
+          format: date-time
+        sent_time:
+          type: string
+          format: date-time
+        read_time:
+          type: string
+          format: date-time
+        failure_reason:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    
+    NotificationTemplate:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        notification_type:
+          type: string
+          enum: [EMAIL, SMS, PUSH, PORTAL]
+        subject_template:
+          type: string
+        content_template:
+          type: string
+        variables:
+          type: array
+          items:
+            type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    
+    CustomerPreference:
+      type: object
+      properties:
+        customer_id:
+          type: integer
+        email_enabled:
+          type: boolean
+        sms_enabled:
+          type: boolean
+        push_enabled:
+          type: boolean
+        portal_enabled:
+          type: boolean
+        preferred_channel:
+          type: string
+          enum: [EMAIL, SMS, PUSH, PORTAL]
+        quiet_hours_start:
+          type: string
+          format: time
+        quiet_hours_end:
+          type: string
+          format: time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    
+    NotificationHistory:
+      type: object
+      properties:
+        id:
+          type: integer
+        notification_id:
+          type: integer
+        customer_id:
+          type: integer
+        notification_type:
+          type: string
+        status:
+          type: string
+        subject:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        details:
+          type: string

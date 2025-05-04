@@ -1,0 +1,536 @@
+openapi: 3.0.3
+info:
+  title: Document Storage Service API
+  version: 1.0.0
+  description: APIs for securely storing and retrieving documents related to the loan process.
+
+servers:
+  - url: http://localhost:8010
+
+paths:
+  /documents:
+    post:
+      summary: Upload a new document
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                customer_id:
+                  type: integer
+                document_type:
+                  type: string
+                  enum: [ID_DOCUMENT, LOAN_CONTRACT, PAYMENT_RECEIPT, FINANCIAL_STATEMENT, UTILITY_BILL, OTHER]
+                category_id:
+                  type: integer
+                description:
+                  type: string
+                metadata:
+                  type: object
+                  description: Additional metadata for the document
+                file:
+                  type: string
+                  format: binary
+              required:
+                - customer_id
+                - document_type
+                - file
+      responses:
+        '201':
+          description: Document uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+
+    get:
+      summary: Get all documents
+      parameters:
+        - in: query
+          name: customer_id
+          schema:
+            type: integer
+          required: false
+          description: Filter by customer ID
+        - in: query
+          name: document_type
+          schema:
+            type: string
+            enum: [ID_DOCUMENT, LOAN_CONTRACT, PAYMENT_RECEIPT, FINANCIAL_STATEMENT, UTILITY_BILL, OTHER]
+          required: false
+          description: Filter by document type
+        - in: query
+          name: category_id
+          schema:
+            type: integer
+          required: false
+          description: Filter by category ID
+      responses:
+        '200':
+          description: List of documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Document'
+
+  /documents/{id}:
+    get:
+      summary: Get document by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Document details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+
+    put:
+      summary: Update document metadata
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                document_type:
+                  type: string
+                  enum: [ID_DOCUMENT, LOAN_CONTRACT, PAYMENT_RECEIPT, FINANCIAL_STATEMENT, UTILITY_BILL, OTHER]
+                category_id:
+                  type: integer
+                metadata:
+                  type: object
+                expiry_date:
+                  type: string
+                  format: date
+                is_archived:
+                  type: boolean
+      responses:
+        '200':
+          description: Document updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Document'
+
+    delete:
+      summary: Delete a document
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Document deleted
+
+  /documents/{id}/content:
+    get:
+      summary: Get document file content
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Document file content
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+  /documents/{id}/versions:
+    get:
+      summary: Get document version history
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Document versions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DocumentVersion'
+
+    post:
+      summary: Upload a new version of a document
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                notes:
+                  type: string
+              required:
+                - file
+      responses:
+        '201':
+          description: New version uploaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentVersion'
+
+  /documents/versions/{version_id}:
+    get:
+      summary: Get specific document version
+      parameters:
+        - in: path
+          name: version_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Document version details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentVersion'
+
+    get:
+      summary: Get specific document version content
+      parameters:
+        - in: path
+          name: version_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Document version file content
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+  /categories:
+    post:
+      summary: Create a new document category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                retention_period_days:
+                  type: integer
+                  description: Number of days to retain documents in this category
+              required:
+                - name
+      responses:
+        '201':
+          description: Category created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentCategory'
+
+    get:
+      summary: Get all document categories
+      responses:
+        '200':
+          description: List of document categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DocumentCategory'
+
+  /categories/{id}:
+    get:
+      summary: Get document category by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Category details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentCategory'
+
+    put:
+      summary: Update document category
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                retention_period_days:
+                  type: integer
+              required:
+                - name
+      responses:
+        '200':
+          description: Category updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentCategory'
+
+    delete:
+      summary: Delete a document category
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Category deleted
+
+  /access/{document_id}:
+    post:
+      summary: Grant access to a document
+      parameters:
+        - in: path
+          name: document_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: integer
+                permission_level:
+                  type: string
+                  enum: [VIEW, EDIT, ADMIN]
+                expiry_date:
+                  type: string
+                  format: date
+              required:
+                - user_id
+                - permission_level
+      responses:
+        '201':
+          description: Access granted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentAccess'
+
+    get:
+      summary: Get document access records
+      parameters:
+        - in: path
+          name: document_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Document access records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DocumentAccess'
+
+    delete:
+      summary: Revoke access to a document
+      parameters:
+        - in: path
+          name: document_id
+          required: true
+          schema:
+            type: integer
+        - in: query
+          name: user_id
+          schema:
+            type: integer
+          required: true
+      responses:
+        '204':
+          description: Access revoked
+
+  /documents/customer/{customer_id}:
+    get:
+      summary: Get all documents for a customer
+      parameters:
+        - in: path
+          name: customer_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: List of customer documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Document'
+
+components:
+  schemas:
+    Document:
+      type: object
+      properties:
+        id:
+          type: integer
+        customer_id:
+          type: integer
+        document_type:
+          type: string
+          enum: [ID_DOCUMENT, LOAN_CONTRACT, PAYMENT_RECEIPT, FINANCIAL_STATEMENT, UTILITY_BILL, OTHER]
+        category_id:
+          type: integer
+        description:
+          type: string
+        filename:
+          type: string
+        file_size:
+          type: integer
+        file_path:
+          type: string
+        mime_type:
+          type: string
+        upload_date:
+          type: string
+          format: date-time
+        last_modified:
+          type: string
+          format: date-time
+        expiry_date:
+          type: string
+          format: date
+        metadata:
+          type: object
+        is_archived:
+          type: boolean
+        version_count:
+          type: integer
+        current_version:
+          type: integer
+
+    DocumentVersion:
+      type: object
+      properties:
+        id:
+          type: integer
+        document_id:
+          type: integer
+        version_number:
+          type: integer
+        file_path:
+          type: string
+        file_size:
+          type: integer
+        uploaded_by:
+          type: integer
+        upload_date:
+          type: string
+          format: date-time
+        notes:
+          type: string
+
+    DocumentCategory:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        retention_period_days:
+          type: integer
+          description: Number of days to retain documents in this category
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    DocumentAccess:
+      type: object
+      properties:
+        id:
+          type: integer
+        document_id:
+          type: integer
+        user_id:
+          type: integer
+        permission_level:
+          type: string
+          enum: [VIEW, EDIT, ADMIN]
+        granted_date:
+          type: string
+          format: date-time
+        expiry_date:
+          type: string
+          format: date
+        granted_by:
+          type: integer
