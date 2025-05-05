@@ -167,6 +167,21 @@ services:
     networks:
       - audit-log-net
 
+#================= FROM THIS IS SERVICES CONTAINER  =================================================
+  auth-service:
+    container_name: auth-service
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    networks:
+      - auth-net
+    depends_on:
+      - auth-db
+    env_file:
+      - ./services/auth-service/.env
+
 networks:
   loan-net:
     driver: bridge
