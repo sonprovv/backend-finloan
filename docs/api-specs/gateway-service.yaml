@@ -1,0 +1,146 @@
+openapi: 3.0.3
+info:
+  title: Gateway Service API
+  version: 1.0.0
+  description: API that routes requests to the Auth Service.
+
+servers:
+  - url: http://gateway-service:8000
+
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user
+      description: Route the registration request to the Auth service.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: johndoe
+                password:
+                  type: string
+                  example: mySecureP@ssword
+                email:
+                  type: string
+                  example: johndoe@example.com
+              required:
+                - username
+                - password
+                - email
+      responses:
+        '200':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User registered successfully
+        '400':
+          description: Invalid input
+        '500':
+          description: Internal server error
+
+  /auth/login:
+    post:
+      summary: Login and get a JWT token
+      description: Route the login request to the Auth service to receive a JWT token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: johndoe
+                password:
+                  type: string
+                  example: mySecureP@ssword
+              required:
+                - username
+                - password
+      responses:
+        '200':
+          description: Login successful, returns JWT token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  token_type:
+                    type: string
+                    example: bearer
+        '401':
+          description: Invalid credentials
+        '500':
+          description: Internal server error
+
+  /auth/validate:
+    post:
+      summary: Validate JWT token
+      description: Route the token validation request to the Auth service.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+              required:
+                - token
+      responses:
+        '200':
+          description: Token is valid
+        '401':
+          description: Invalid token
+        '500':
+          description: Internal server error
+
+  /auth/me:
+    get:
+      summary: Get current user info
+      description: Route the request to the Auth service to get user info based on JWT token.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User info fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  username:
+                    type: string
+                  email:
+                    type: string
+                  roles:
+                    type: array
+                    items:
+                      type: string
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal server error
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
