@@ -8,7 +8,7 @@ servers:
   - url: http://auth-service:8001
 
 paths:
-  /auth/register:
+  /api/auth/register:
     post:
       summary: Register a new user
       requestBody:
@@ -37,7 +37,7 @@ paths:
         '400':
           description: Invalid input
 
-  /auth/login:
+  /api/auth/login:
     post:
       summary: Login and receive JWT token
       requestBody:
@@ -73,7 +73,7 @@ paths:
         '401':
           description: Invalid credentials
 
-  /auth/validate:
+  /api/auth/validate:
     post:
       summary: Validate JWT token
       requestBody:
@@ -94,7 +94,7 @@ paths:
         '401':
           description: Invalid token
 
-  /auth/me:
+  /api/auth/me:
     get:
       summary: Get current user info based on JWT token
       security:
