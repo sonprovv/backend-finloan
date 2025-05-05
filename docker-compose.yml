@@ -15,7 +15,7 @@ services:
     volumes:
       - loan_db_data:/var/lib/mysql
     networks:
-      - loan-net
+      - mid-project-net
 
   customer-db:
     image: mysql:8.0
@@ -30,7 +30,7 @@ services:
     volumes:
       - customer_db_data:/var/lib/mysql
     networks:
-      - customer-net
+      - mid-project-net
 
   credit-score-db:
     image: mysql:8.0
@@ -45,7 +45,7 @@ services:
     volumes:
       - credit_score_db_data:/var/lib/mysql
     networks:
-      - credit-score-net
+      - mid-project-net
 
   loan-contract-db:
     image: mysql:8.0
@@ -60,7 +60,7 @@ services:
     volumes:
       - loan_contract_db_data:/var/lib/mysql
     networks:
-      - loan-contract-net
+      - mid-project-net
 
   payment-scheduling-db:
     image: mysql:8.0
@@ -75,7 +75,7 @@ services:
     volumes:
       - payment_scheduling_db_data:/var/lib/mysql
     networks:
-      - payment-scheduling-net
+      - mid-project-net
 
   identity-verification-db:
     image: mysql:8.0
@@ -90,7 +90,7 @@ services:
     volumes:
       - identity_verification_db_data:/var/lib/mysql
     networks:
-      - identity-verification-net
+      - mid-project-net
 
   risk-assessment-db:
     image: mysql:8.0
@@ -105,7 +105,7 @@ services:
     volumes:
       - risk_assessment_db_data:/var/lib/mysql
     networks:
-      - risk-assessment-net
+      - mid-project-net
 
   notification-db:
     image: mysql:8.0
@@ -120,7 +120,7 @@ services:
     volumes:
       - notification_db_data:/var/lib/mysql
     networks:
-      - notification-net
+      - mid-project-net
 
   document-storage-db:
     image: mysql:8.0
@@ -135,7 +135,7 @@ services:
     volumes:
       - document_storage_db_data:/var/lib/mysql
     networks:
-      - document-storage-net
+      - mid-project-net
 
   auth-db:
     image: mysql:8.0
@@ -150,7 +150,7 @@ services:
     volumes:
       - auth_db_data:/var/lib/mysql
     networks:
-      - auth-net
+      - mid-project-net
 
   audit-log-db:
     image: mysql:8.0
@@ -165,9 +165,22 @@ services:
     volumes:
       - audit_log_db_data:/var/lib/mysql
     networks:
-      - audit-log-net
+      - mid-project-net
 
 #================= FROM THIS IS SERVICES CONTAINER  =================================================
+  gateway-service:
+    container_name: gateway-service
+    build:
+      context: gateway
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    networks:
+      - mid-project-net
+    volumes:
+      - ./gateway:/app
+#    depends_on:
+
   auth-service:
     container_name: auth-service
     build:
@@ -176,34 +189,17 @@ services:
     ports:
       - "8001:8001"
     networks:
-      - auth-net
+      - mid-project-net
     depends_on:
       - auth-db
+      - gateway-service
     env_file:
       - ./services/auth-service/.env
+    volumes:
+      - ./services/auth-service:/app
 
 networks:
-  loan-net:
-    driver: bridge
-  customer-net:
-    driver: bridge
-  credit-score-net:
-    driver: bridge
-  loan-contract-net:
-    driver: bridge
-  payment-scheduling-net:
-    driver: bridge
-  identity-verification-net:
-    driver: bridge
-  risk-assessment-net:
-    driver: bridge
-  notification-net:
-    driver: bridge
-  document-storage-net:
-    driver: bridge
-  auth-net:
-    driver: bridge
-  audit-log-net:
+  mid-project-net:
     driver: bridge
 
 volumes:
