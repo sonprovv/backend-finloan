@@ -1,7 +1,7 @@
 version: "3.8"
 
 services:
-#  All database services
+  #  All database services
   loan-db:
     image: mysql:8.0
     container_name: loan-db
@@ -167,7 +167,7 @@ services:
     networks:
       - mid-project-net
 
-#================= FROM THIS IS SERVICES CONTAINER  =================================================
+  #================= FROM THIS IS SERVICES CONTAINER  =================================================
   gateway-service:
     container_name: gateway-service
     build:
@@ -179,7 +179,7 @@ services:
       - mid-project-net
     volumes:
       - ./gateway:/app
-#    depends_on:
+  #    depends_on:
 
   auth-service:
     container_name: auth-service
@@ -198,6 +198,80 @@ services:
     volumes:
       - ./services/auth-service:/app
 
+  customer-service:
+    container_name: customer-service
+    build:
+      context: ./services/customer-service
+      dockerfile: Dockerfile
+    ports:
+      - "8003:8003"
+    networks:
+      - mid-project-net
+    depends_on:
+      - customer-db
+      - gateway-service
+    env_file:
+      - ./services/customer-service/.env
+    volumes:
+      - ./services/customer-service:/app
+
+  credit-score-service:
+    container_name: credit-score-service
+    build:
+      context: ./services/credit-score-service
+      dockerfile: Dockerfile
+    ports:
+      - "8005:8005"
+    networks:
+      - mid-project-net
+    depends_on:
+      - credit-score-db
+      - gateway-service
+    env_file:
+      - ./services/credit-score-service/.env
+    volumes:
+      - ./services/credit-score-service:/app
+
+  risk-assessment-service:
+    container_name: risk-assessment-service
+    build:
+      context: ./services/risk-assessment-service
+      dockerfile: Dockerfile
+    ports:
+      - "8006:8006"
+    networks:
+      - mid-project-net
+    depends_on:
+      - risk-assessment-db
+      - gateway-service
+    env_file:
+      - ./services/risk-assessment-service/.env
+    volumes:
+      - ./services/risk-assessment-service:/app
+
+  identity-verification-service:
+    container_name: identity-verification-service
+    build:
+      context: ./services/identity-verification-service
+      dockerfile: Dockerfile
+    ports:
+      - "8008:8008"
+    volumes:
+      - identity_verification_uploads:/app/uploads
+    networks:
+      - mid-project-net
+    depends_on:
+      - identity-verification-db
+    environment:
+      - DATABASE_URL=mysql+pymysql://identity_verification_user:identity_verification_password@identity-verification-db:3306/identity_verification_db
+      - UPLOAD_DIR=/app/uploads
+      - OCR_API_KEY=K84590567688957
+      - OCR_API_ENDPOINT=https://api.ocr.space/parse/image
+      - MAX_UPLOAD_SIZE=10485760
+      - VERIFICATION_API_KEY=your_verification_api_key
+      - VERIFICATION_API_ENDPOINT=https://api.verification-provider.com/verify
+      - SECRET_KEY=f823j0498fpj9821089jf128h0v1p2h0198hfe192hf0921h8f
+
 networks:
   mid-project-net:
     driver: bridge
@@ -214,3 +288,4 @@ volumes:
   document_storage_db_data:
   auth_db_data:
   audit_log_db_data:
+  identity_verification_uploads:

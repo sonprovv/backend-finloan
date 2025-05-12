@@ -1,25 +1,23 @@
-from fastapi import Request
+from fastapi import Request, status
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from starlette.requests import Request
-from starlette.responses import Response
 from typing import Union
 
-def http_exception_handler(request: Request, exc: StarletteHTTPException) -> Response:
+async def http_exception_handler(request: Request, exc: StarletteHTTPException) -> JSONResponse:
     return JSONResponse(
         status_code=exc.status_code,
-        content={"message": exc.detail},
+        content={"detail": exc.detail},
     )
 
-def validation_exception_handler(request: Request, exc: RequestValidationError) -> Response:
+async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
     return JSONResponse(
-        status_code=422,
-        content={"message": "Validation error", "details": exc.errors()},
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={"detail": exc.errors()},
     )
 
-def general_exception_handler(request: Request, exc: Exception) -> Response:
+async def general_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     return JSONResponse(
-        status_code=500,
-        content={"message": "Internal server error"},
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={"detail": str(exc)},
     )

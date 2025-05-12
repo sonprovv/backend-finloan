@@ -1,19 +1,21 @@
-import os
-from dotenv import load_dotenv
+from pydantic_settings import BaseSettings
+from functools import lru_cache
 
-load_dotenv()
+class Settings(BaseSettings):
+    # Email Configuration
+    smtp_server: str
+    smtp_port: int
+    smtp_username: str
+    smtp_password: str
 
+    # SMS Configuration
+    sms_api_key: str
+    sms_api_url: str
 
-class Settings:
-    MYSQL_USER: str = os.getenv("MYSQL_USER", "root")
-    MYSQL_PASSWORD: str = os.getenv("MYSQL_PASSWORD", "password")
-    MYSQL_HOST: str = os.getenv("MYSQL_HOST", "localhost")
-    MYSQL_PORT: int = int(os.getenv("MYSQL_PORT", 3306))
-    MYSQL_DB: str = os.getenv("MYSQL_DB", "loan_application_db")
+    class Config:
+        env_file = ".env"
+        case_sensitive = True
 
-    DATABASE_URL: str = (
-        f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}"
-    )
-
-
-settings = Settings()
+@lru_cache()
+def get_settings() -> Settings:
+    return Settings()
