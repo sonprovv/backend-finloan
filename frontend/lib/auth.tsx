@@ -255,11 +255,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const currentStatus = {
       storedToken,
       stateToken: token,
-      isAuthenticated: !!user,
+      // isAuthenticated: !!user,
       isLoading
     }
     console.log("Current auth status:", currentStatus)
-    return !!storedToken && !!user
+    // return !!storedToken && !!user
+    return !!storedToken
+
   }
 
   // Add a function to verify auth state
@@ -272,7 +274,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       storedToken,
       stateToken,
       hasUser,
-      isAuthenticated: !!user,
+      // isAuthenticated: !!user,
       isLoading
     })
     
